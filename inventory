@@ -1,5 +1,7 @@
 [all]
-52.62.121.87
-52.63.147.156
-3.27.200.34
+3.27.205.128 ansible_user=ubuntu
+54.153.199.97 ansible_user=ubuntu
+13.211.164.195 ansible_user=ubuntu
+3.27.153.44 ansible_user=ubuntu
+52.64.102.251 ansible_user=ec2-user 
 
