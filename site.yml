@@ -5,12 +5,14 @@
   pre_tasks:
 
     - name: install updates (RedHat)
+      tags: always
       dnf:
         update_only: true
         update_cache: true
       when: ansible_distribution == "RedHat"
 
     - name: Install updates (Ubuntu)
+      tags: always
       apt:
         upgrade: dist
         update_cache: true
@@ -21,6 +23,7 @@
   tasks:
 
     - name: Install apache2 and php package for Ubuntu servers
+      tags: apache,apache2,ubuntu
       apt:
         name: 
           - "{{ apache_package }}"
@@ -29,6 +32,7 @@
       when: ansible_distribution == "Ubuntu"
 
     - name: Install apache and php package on RedHat
+      tags: apache,redhat,httpd
       vars:
         ansible_ssh_user: ec2-user
       dnf:
@@ -42,12 +46,14 @@
   become: true
   tasks:
     - name: Install mariadb package (RedHat)
+      tags: redhat,db,mariadb
       dnf:
         name: mariadb
         state: latest
       when: ansible_distribution == "ReadHat"
 
     - name: Install mariadb package (Ubuntu)
+      tags: ubuntu,db,mariadb
       apt:
         name: mariadb-server
         state: latest
@@ -58,6 +64,7 @@
   become: true
   tasks:
     - name: Install samba package
+      tags: samba
       package:
         name: samba
         state: latest
