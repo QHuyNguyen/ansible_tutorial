@@ -4,19 +4,30 @@
   become: true
   pre_tasks:
 
-    - name: install updates (RedHat)
+    - name: update repo cache (RedHat)
       tags: always
       dnf:
-        update_only: true
         update_cache: true
+      changed_when: false
       when: ansible_distribution == "RedHat"
 
-    - name: Install updates (Ubuntu)
+    - name: update repo cache (Ubuntu)
       tags: always
       apt:
-        upgrade: dist
         update_cache: true
+      changed_when: false
       when: ansible_distribution == "Ubuntu"
+
+- hosts: all
+  become: true
+  tasks:
+    
+    - name: add ssh key for simone
+      tags: always
+      authorized_key:
+        user: simone
+        key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF5mxo0C8FcGwOXY1OrRaKeX1SdvgOnQTC9/2m2sIqdz ansible"
+    
 
 - hosts: workstations
   become: true
@@ -95,6 +106,7 @@
 - hosts: db_servers
   become: true
   tasks:
+
     - name: Install mariadb package (RedHat)
       tags: redhat,db,mariadb
       dnf:
@@ -113,6 +125,7 @@
 - hosts: file_servers
   become: true
   tasks:
+
     - name: Install samba package
       tags: samba
       package:
