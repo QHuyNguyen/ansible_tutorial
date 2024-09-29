@@ -1,0 +1,133 @@
+---
+
+- hosts: all
+  become: true
+  pre_tasks:
+
+    - name: update repo cache (RedHat)
+      tags: always
+      dnf:
+        update_cache: true
+      changed_when: false
+      when: ansible_distribution == "RedHat"
+
+    - name: update repo cache (Ubuntu)
+      tags: always
+      apt:
+        update_cache: true
+      changed_when: false
+      when: ansible_distribution == "Ubuntu"
+
+- hosts: all
+  become: true
+  tasks:
+    
+    - name: add ssh key for simone
+      tags: always
+      authorized_key:
+        user: simone
+        key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF5mxo0C8FcGwOXY1OrRaKeX1SdvgOnQTC9/2m2sIqdz ansible"
+    
+
+- hosts: workstations
+  become: true
+  tasks:
+
+    - name: install unzip
+      package:
+        name: unzip
+    
+    - name: install terraform
+      unarchive:
+        src: https://releases.hashicorp.com/terraform/0.12.28/terraform_0.12.28_linux_amd64.zip
+        dest: /usr/local/bin
+        remote_src: true
+        mode: 0755
+        owner: root
+        group: root
+
+- hosts: web_servers
+  become: true
+  tasks:
+
+    - name: Install apache2 and php package for Ubuntu servers
+      tags: apache,apache2,ubuntu
+      apt:
+        name: 
+          - "{{ apache_package }}"
+          - "{{ php_package }}"
+        state: latest
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install apache and php package on RedHat
+      tags: apache,redhat,httpd
+      vars:
+        ansible_ssh_user: ec2-user
+      dnf:
+        name: 
+          - httpd
+          - php
+        state: latest
+      when: ansible_distribution == "RedHat"
+
+    - name: start httpd (RedHat)
+      tags: apache,redhat,httpd
+      service:
+        name: httpd
+        state: started
+        enabled: true
+      when: ansible_distribution == "RedHat"
+
+    - name: Change email address for admin
+      tags: apache,redhat,httpd
+      lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        regexp: '^ServerAdmin'
+        line: ServerAdmin somebodyhuey@somewhere.net
+      when: ansible_distribution == "RedHat"
+      register: httpd
+    
+    - name: restart httpd (Redhat)
+      tags: apache,redhat,httpd
+      service:
+        name: httpd
+        state: restarted
+      when: httpd.changed
+
+    - name: Copy default html file for site
+      tags: apache,apache2,httpd
+      copy:
+        src: ./files/default_site.html
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: 0644
+
+- hosts: db_servers
+  become: true
+  tasks:
+
+    - name: Install mariadb package (RedHat)
+      tags: redhat,db,mariadb
+      dnf:
+        name: mariadb
+        state: latest
+      when: ansible_distribution == "RedHat"
+
+    - name: Install mariadb package (Ubuntu)
+      tags: ubuntu,db,mariadb
+      apt:
+        name: mariadb-server
+        state: latest
+      when: ansible_distribution == "Ubuntu"
+
+
+- hosts: file_servers
+  become: true
+  tasks:
+
+    - name: Install samba package
+      tags: samba
+      package:
+        name: samba
+        state: latest
