@@ -59,6 +59,30 @@
         state: latest
       when: ansible_distribution == "RedHat"
 
+    - name: start httpd (RedHat)
+      tags: apache,redhat,httpd
+      service:
+        name: httpd
+        state: started
+        enabled: true
+      when: ansible_distribution == "RedHat"
+
+    - name: Change email address for admin
+      tags: apache,redhat,httpd
+      lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        regexp: '^ServerAdmin'
+        line: ServerAdmin somebodyhuey@somewhere.net
+      when: ansible_distribution == "RedHat"
+      register: httpd
+    
+    - name: restart httpd (Redhat)
+      tags: apache,redhat,httpd
+      service:
+        name: httpd
+        state: restarted
+      when: httpd.changed
+
     - name: Copy default html file for site
       tags: apache,apache2,httpd
       copy:
@@ -76,7 +100,7 @@
       dnf:
         name: mariadb
         state: latest
-      when: ansible_distribution == "ReadHat"
+      when: ansible_distribution == "RedHat"
 
     - name: Install mariadb package (Ubuntu)
       tags: ubuntu,db,mariadb
